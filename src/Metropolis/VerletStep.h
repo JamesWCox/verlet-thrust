@@ -63,7 +63,11 @@ namespace VerletCalcs {
      *                      in range for each molecule 
      * @return The total energy of the box (discounts initial lj / charge energy)
      */
-    Real calcMolecularEnergyContribution(int currMol, int startMol, thrust::host_vector<int> verletList);
+    template <typename T>
+    struct calcMolecularEnergyContribution {
+        __host__ //__device__
+        Real operator()(int currMol, int startMol, thrust::host_vector<int> verletList) const;
+    };
     
      /**
       * Determines whether or not two molecule's primaryIndexes are

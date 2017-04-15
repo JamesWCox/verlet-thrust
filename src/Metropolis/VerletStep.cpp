@@ -4,7 +4,7 @@
 #include "GPUCopy.h"
 
 Real VerletStep::calcMolecularEnergyContribution(int currMol, int startMol) {
-    return VerletCalcs::calcMolecularEnergyContribution(currMol, startMol, this->h_verletList);
+    return VerletCalcs::calcMolecularEnergyContribution<int>()(currMol, startMol, this->h_verletList);
 }
 
 Real VerletStep::calcSystemEnergy(Real &subLJ, Real &subCharge, int numMolecules) {
@@ -50,8 +50,8 @@ VerletStep::~VerletStep() {
 
 
 // ----- VerletCalcs Definitions -----
-
-Real VerletCalcs::calcMolecularEnergyContribution(int currMol, int startMol, thrust::host_vector<int> verletList){
+template <typename T>
+Real VerletCalcs::calcMolecularEnergyContribution<T>::operator()(int currMol, int startMol, thrust::host_vector<int> verletList) const {
     Real total = 0.0;
 
     SimBox* sb = GPUCopy::simBoxCPU();
@@ -92,7 +92,7 @@ Real VerletCalcs::calcMolecularEnergyContribution(int currMol, int startMol, thr
 
                 total += calcMoleculeInteractionEnergy(currMol, neighborIndex, sb);
             } // if
-        } // for neighbors 
+        } // for neighbors
     } // else
     return total;
 } // calcMolecularEnergyContribution()
