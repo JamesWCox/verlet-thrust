@@ -13,38 +13,6 @@
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 
-class VerletStep: public SimulationStep {
-    public:
-        explicit VerletStep(SimBox* box): SimulationStep(box),
-                                    h_verletList(0),
-                                    h_verletAtomCoords(0) {}
-//                                    d_verletList(0),
-//                                    d_verletAtomCoords(NULL) {}
-
-        virtual ~VerletStep();
-        virtual Real calcSystemEnergy(Real &subLJ, Real &subCharge, int numMolecules);
-
-       /**
-        * Determines the energy contribution of a particular molecule.
-        * @param currMol The index of the molecule to calculate the contribution
-        * @param startMol The index of the molecule to begin searching from to 
-        *                      determine interaction energies
-        * @param verletList The host_vector<int> containing the indexes of molecules
-        *                      in range for each molecule 
-        * @return The total energy of the box (discounts initial lj / charge energy)
-        */
-        virtual Real calcMolecularEnergyContribution(int currMol, int startMol);
-        virtual void changeMolecule(int molIdx, SimBox *box);
-        virtual void rollback(int molIdx, SimBox *box);
-
-    private:
-        thrust::host_vector<int> h_verletList;
-        thrust::host_vector<Real> h_verletAtomCoords;
-//        thrust::device_vector<int> d_verletList;
-//        Real* d_verletAtomCoords;
-        void createVerlet();
-};
-
 /**
  * VerletCalcs namespace
  *
@@ -65,6 +33,9 @@ namespace VerletCalcs {
      */
     template <typename T>
     struct calcMolecularEnergyContribution {
+
+        calcMolecularEnergyContribution(){};
+
         __host__ //__device__
         Real operator()(int currMol, int startMol, thrust::host_vector<int> verletList) const;
     };
@@ -102,5 +73,43 @@ namespace VerletCalcs {
      */
     thrust::host_vector<int> newVerletList();
 }
+
+
+
+class VerletStep: public SimulationStep {
+    private:
+        thrust::host_vector<int> h_verletList;
+        thrust::host_vector<Real> h_verletAtomCoords;
+//        thrust::device_vector<int> d_verletList;
+//        Real* d_verletAtomCoords;
+        void createVerlet();
+
+        // Functors
+        VerletCalcs::calcMolecularEnergyContribution<int> Contribution;
+
+    public:
+        explicit VerletStep(SimBox* box): SimulationStep(box),
+                                    h_verletList(0),
+                                    h_verletAtomCoords(0) {}
+//                                    d_verletList(0),
+//                                    d_verletAtomCoords(NULL) {}
+
+        virtual ~VerletStep();
+        virtual Real calcSystemEnergy(Real &subLJ, Real &subCharge, int numMolecules);
+
+       /**
+        * Determines the energy contribution of a particular molecule.
+        * @param currMol The index of the molecule to calculate the contribution
+        * @param startMol The index of the molecule to begin searching from to 
+        *                      determine interaction energies
+        * @param verletList The host_vector<int> containing the indexes of molecules
+        *                      in range for each molecule 
+        * @return The total energy of the box (discounts initial lj / charge energy)
+        */
+        virtual Real calcMolecularEnergyContribution(int currMol, int startMol);
+        virtual void changeMolecule(int molIdx, SimBox *box);
+        virtual void rollback(int molIdx, SimBox *box);
+
+};
 
 #endif

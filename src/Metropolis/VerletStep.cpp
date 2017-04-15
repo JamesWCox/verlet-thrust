@@ -4,7 +4,7 @@
 #include "GPUCopy.h"
 
 Real VerletStep::calcMolecularEnergyContribution(int currMol, int startMol) {
-    return VerletCalcs::calcMolecularEnergyContribution<int>()(currMol, startMol, this->h_verletList);
+    return Contribution(currMol, startMol, this->h_verletList);
 }
 
 Real VerletStep::calcSystemEnergy(Real &subLJ, Real &subCharge, int numMolecules) {
